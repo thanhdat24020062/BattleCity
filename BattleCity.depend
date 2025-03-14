@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1741936707 source:e:\c++\battlecity\main.cpp
+	<iostream>
+	<SDL.h>
+	<SDL_image.h>
+	<vector>
+	<algorithm>
+
