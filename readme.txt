@@ -1,0 +1,11 @@
+-Tên: Nguyễn Hữu Thành Đạt.
+-MSSV: 24020062.
+-Em xin giới thiệu bài tập lớn lập trình game Battle City.
+-Ngưỡng điểm em xứng đáng là trên 8.5.
+-Em thấy em xứng đáng ngưỡng điểm đó là vì em dành thời gian khá nhiều vào cho dự án game của em, em tự mày mò và tìm kiếm các cách làm ra một con game đúng với logic, và ngoài ra em còn sáng tạo một số chức năng theo ý nghĩ của bản thân.
+-Với code game cơ bản thì em được thầy giáo thực hành hướng dẫn và đã ra được các hình vuông có thể bắn nhau.
+-Sau đó em nâng cấp code của mình lên theo ý nghĩ của bản thân và chỉ tham khảo Logic của game và AI để giúp đỡ em những chỗ em chưa hiểu.
+-Em có cài thêm thư viên Mixer.
+-Em tự tìm, tự design ảnh, file âm thanh để chèn vào code.
+-File ảnh hầu hết là em nhờ Chat GPT tạo ảnh nên không có link nguồn của ảnh ạ.
+-Mức độ AI hỗ trợ em trong bài là khoảng 60%.
