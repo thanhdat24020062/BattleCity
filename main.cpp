@@ -231,6 +231,67 @@ public:
     }
 };
 
+class Menu {
+public:
+    SDL_Texture* playTexture;
+    SDL_Texture* exitTexture;
+    SDL_Texture* backgroundTexture;
+    SDL_Rect playButton;
+    SDL_Rect exitButton;
+    bool showMenu;
+
+    Menu(SDL_Renderer* renderer) {
+        backgroundTexture = IMG_LoadTexture(renderer, "backgroundmenu.png");
+        if (!backgroundTexture) cerr << "Error loading background: " << IMG_GetError() << endl;
+
+        playTexture = IMG_LoadTexture(renderer, "play.png");
+        if (!playTexture) cerr << "Error loading play button: " << IMG_GetError() << endl;
+
+        exitTexture = IMG_LoadTexture(renderer, "exit.png");
+        if (!exitTexture) cerr << "Error loading exit button: " << IMG_GetError() << endl;
+
+        playButton = {SCREEN_WIDTH/2 - 100, 300, 200, 80};
+        exitButton = {SCREEN_WIDTH/2 - 100, 400, 200, 80};
+        showMenu = true;
+    }
+
+    void handleEvents(SDL_Event& e) {
+    if (e.type == SDL_MOUSEBUTTONDOWN) {
+        int x, y;
+        SDL_GetMouseState(&x, &y);
+        SDL_Point mousePos = {x, y};
+
+        if (SDL_PointInRect(&mousePos, &playButton)) {
+            showMenu = false;
+        }
+
+        if (SDL_PointInRect(&mousePos, &exitButton)) {
+            exit(0);
+        }
+    }
+}
+
+    void render(SDL_Renderer* renderer) {
+        if (backgroundTexture) {
+            SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
+        } else {
+            SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+            SDL_RenderClear(renderer);
+        }
+
+        if (playTexture) SDL_RenderCopy(renderer, playTexture, NULL, &playButton);
+        if (exitTexture) SDL_RenderCopy(renderer, exitTexture, NULL, &exitButton);
+
+        SDL_RenderPresent(renderer);
+    }
+
+    ~Menu() {
+        SDL_DestroyTexture(backgroundTexture);
+        SDL_DestroyTexture(playTexture);
+        SDL_DestroyTexture(exitTexture);
+    }
+};
+
 class Game
 {
 public:
@@ -241,6 +302,11 @@ public:
     SDL_Texture* gameOverTexture;
     Mix_Chunk* playerShootSound;
     Mix_Chunk* enemyShootSound;
+    SDL_Texture* replayTexture;
+    SDL_Texture* exitTexture;
+    SDL_Rect replayButton;
+    SDL_Rect exitButton;
+
     bool isGameOver=false;
     bool running;
     bool isVictory;
@@ -255,6 +321,9 @@ public:
         if (event.type == SDL_QUIT) {
             running = false;
         }
+        else if ((isVictory || isGameOver) && event.type == SDL_MOUSEBUTTONDOWN) {
+                handleEndScreenClick(event);
+        }
         else if (event.type == SDL_KEYDOWN) {
             switch (event.key.keysym.sym) {
                 case SDLK_UP: player.move(0, -5, walls); break;
@@ -268,6 +337,28 @@ public:
             }
         }
     }
+    }
+    void handleEndScreenClick(SDL_Event& e) {
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    SDL_Point mousePos = {x, y}; // Tạo SDL_Point
+
+    if (SDL_PointInRect(&mousePos, &replayButton)) {
+        resetGame();
+    } else if (SDL_PointInRect(&mousePos, &exitButton)) {
+        running = false;
+    }
+}
+
+    void resetGame() {
+    player = PlayerTank(((MAP_WIDTH-1)/2)*TILE_SIZE, (MAP_HEIGHT-2)*TILE_SIZE);
+    walls.clear();
+    generateWalls();
+    enemies.clear();
+    spawnEnemies();
+    isVictory = false;
+    isGameOver = false;
+    running = true;
 }
 
     void generateWalls()
@@ -340,6 +431,10 @@ public:
             cerr << "Failed to load textures! SDL_image Error: " << IMG_GetError() << endl;
             running = false;
         }
+        replayTexture = IMG_LoadTexture(renderer, "replay.png");
+        exitTexture = IMG_LoadTexture(renderer, "exit.png");
+        replayButton = {SCREEN_WIDTH/2 - 130, 400, 120, 50};  // Giữa trục X
+        exitButton = {SCREEN_WIDTH/2 + 10, 400, 120, 50};
 
         generateWalls();
         spawnEnemies();
@@ -350,14 +445,15 @@ public:
         SDL_SetRenderDrawColor(renderer,128,128,128,255);
         SDL_RenderClear(renderer);
 
-        if(isVictory)
-        {
-            SDL_RenderCopy(renderer, winTexture, NULL, NULL);
+        if (isVictory || isGameOver) {
+        SDL_Texture* endTexture = isVictory ? winTexture : gameOverTexture;
+        if (endTexture) {
+            SDL_RenderCopy(renderer, endTexture, NULL, NULL);
         }
-        else if(isGameOver)
-        {
-            SDL_RenderCopy(renderer, gameOverTexture, NULL, NULL);
-        }
+
+        if (replayTexture) SDL_RenderCopy(renderer, replayTexture, NULL, &replayButton);
+        if (exitTexture) SDL_RenderCopy(renderer, exitTexture, NULL, &exitButton);
+    }
         else
         {
             SDL_SetRenderDrawColor(renderer,0,0,0,255);
@@ -386,16 +482,14 @@ public:
         SDL_RenderPresent(renderer);
     }
 
-    void run()
-    {
-        while (running)
-        {
-            handleEvents();
-            update();
-            render();
-            SDL_Delay(16);
-        }
+    void run() {
+    while (running) {
+        handleEvents();
+        update();
+        render();
+        SDL_Delay(16);
     }
+}
 
     void update()
     {
@@ -517,46 +611,72 @@ public:
         SDL_DestroyWindow(window);
         Mix_FreeChunk(playerShootSound);
         Mix_FreeChunk(enemyShootSound);
-    Mix_CloseAudio();
-        IMG_Quit();
-        SDL_Quit();
+        Mix_CloseAudio();
     }
 };
 
-int main(int argc, char* argv[])
-{
-    Game game;
-    if(game.running)
-    {
-        game.run();
-        if(game.isVictory)
-        {
-            Uint32 startTime = SDL_GetTicks();
-            SDL_Event e;
+int main(int argc, char* argv[]) {
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+    IMG_Init(IMG_INIT_PNG);
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
 
-            while(SDL_GetTicks() - startTime < 3000)
-            {
-                while(SDL_PollEvent(&e))
-                {
-                    if(e.type == SDL_QUIT) return 0;
-                }
-                game.render();
-            }
+    SDL_Window* menuWindow = SDL_CreateWindow("Menu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                            SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Renderer* menuRenderer = SDL_CreateRenderer(menuWindow, -1, SDL_RENDERER_ACCELERATED);
+
+    Menu menu(menuRenderer);
+    while (menu.showMenu) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) exit(0);
+            menu.handleEvents(e);
         }
-        if(game.isVictory || game.isGameOver)
-        {
-            Uint32 startTime = SDL_GetTicks();
-            SDL_Event e;
+        menu.render(menuRenderer);
+        SDL_Delay(16);
+    }
 
-            while(SDL_GetTicks() - startTime < 3000)
-            {
-                while(SDL_PollEvent(&e))
-                {
-                    if(e.type == SDL_QUIT) return 0;
+    SDL_DestroyRenderer(menuRenderer);
+    SDL_DestroyWindow(menuWindow);
+
+    Game game;
+    while (true) {
+        if (game.running) {
+            game.run();
+        }
+
+        if (game.isVictory || game.isGameOver) {
+            bool inEndScreen = true;
+            while (inEndScreen) {
+                SDL_Event e;
+                while (SDL_PollEvent(&e)) {
+                    if (e.type == SDL_QUIT) {
+                        inEndScreen = false;
+                        game.running = false;
+                    }
+                    game.handleEvents();
                 }
+
                 game.render();
+
+                if (!game.running) {
+                    inEndScreen = false;
+                }
+
+                SDL_Delay(16);
             }
+
+            if (game.running) {
+                game.resetGame();
+            } else {
+                break;
+            }
+        } else {
+            break;
         }
     }
+
+    Mix_CloseAudio();
+    IMG_Quit();
+    SDL_Quit();
     return 0;
 }
