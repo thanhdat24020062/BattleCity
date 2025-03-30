@@ -299,10 +299,10 @@ public:
         backgroundMusic = Mix_LoadMUS("nhacnen.wav");
         Mix_PlayMusic(backgroundMusic, -1);
 
-        playerShootSound = Mix_LoadWAV("shoot.wav");
-        enemyShootSound = Mix_LoadWAV("shoot.wav");
-        Mix_VolumeChunk(playerShootSound, 15);
-        Mix_VolumeChunk(enemyShootSound, 15);
+        playerShootSound = Mix_LoadWAV("music.wav");
+        enemyShootSound = Mix_LoadWAV("music.wav");
+        Mix_VolumeChunk(playerShootSound, 10);
+        Mix_VolumeChunk(enemyShootSound, 10);
 
         wallTexture = IMG_LoadTexture(renderer, "wall.png");
         winTexture = IMG_LoadTexture(renderer, "win.png");
