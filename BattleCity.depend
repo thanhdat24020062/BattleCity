@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1743261950 source:e:\c++\battlecity\main.cpp
+1743348794 source:e:\c++\battlecity\main.cpp
 	<iostream>
 	<SDL.h>
 	<SDL_image.h>
